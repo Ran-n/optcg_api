@@ -1,6 +1,6 @@
 # optcg_api
 
-## Software stak
+## Software stack
 
 FastAPI (REST) + SQLite
 
