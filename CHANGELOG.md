@@ -20,6 +20,8 @@ This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ### Added
 
+- `Naip.is_errata` boolean column (default `False`) to flag errata prints; migration `a1b2c3d4e5f7`
+- ER and MR diagrams updated to reflect `is_errata` column on `Naip`
 - `Name`, `Effect`, `Trigger`, `Image` dedup tables — shared string values referenced by FK from `Card` and `Naip` to avoid redundancy
 - `CardEffectHistory`, `CardTriggerHistory` audit tables with `valid_from` / `valid_to` validity windows
 - `_DateTimeMs` custom SQLAlchemy type — stores `datetime` as `YYYY-MM-DD HH:MM:SS.mmm` (millisecond precision) in SQLite

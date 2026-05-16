@@ -2,7 +2,7 @@
 """
 Authors: Ran# <ran.hash@proton.me>
 Created: 2026/05/13 13:13:00.000000
-Revised: 2026/05/15 13:33:58.453060
+Revised: 2026/05/16 15:46:38.702394
 """
 
 from datetime import UTC, date, datetime
@@ -249,6 +249,7 @@ class Naip(SQLModel, table=True):
     effect_fk: int | None = Field(default=None, foreign_key="effect.id")
     trigger_fk: int | None = Field(default=None, foreign_key="trigger.id")
     is_default: bool = Field(default=False)
+    is_errata: bool = Field(default=False)
 
 
 class CardEffectHistory(SQLModel, table=True):
