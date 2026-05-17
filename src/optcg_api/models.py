@@ -2,7 +2,7 @@
 """
 Authors: Ran# <ran.hash@proton.me>
 Created: 2026/05/13 13:13:00.000000
-Revised: 2026/05/16 22:10:55.727647
+Revised: 2026/05/17 17:06:48.323718
 """
 
 from datetime import UTC, date, datetime
@@ -252,6 +252,11 @@ class Naip(SQLModel, table=True):
     trigger_fk: int | None = Field(default=None, foreign_key="trigger.id")
     is_default: bool = Field(default=False)
     is_errata: bool = Field(default=False)
+    cardtype_fk: int | None = Field(default=None, foreign_key="card_type.id")
+    power: int | None = None
+    life: int | None = None
+    counter: int | None = None
+    cost: int | None = None
 
 
 class CardEffectHistory(SQLModel, table=True):
@@ -399,3 +404,111 @@ class CardResword(SQLModel, table=True):
     updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
     card_fk: int = Field(foreign_key="card.id")
     resword_fk: int = Field(foreign_key="resword.id")
+
+
+# ── Naip junction tables ─────────────────────────────────────────────────────
+
+
+class NaipColor(SQLModel, table=True):
+    __tablename__ = "naip_color"
+    __table_args__ = (
+        UniqueConstraint("naip_fk", "color_fk"),
+        Index("ix_naip_color_naip_fk", "naip_fk"),
+        Index("ix_naip_color_color_fk", "color_fk"),
+    )
+
+    id: int | None = Field(default=None, primary_key=True)
+    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    naip_fk: int = Field(foreign_key="naip.id")
+    color_fk: int = Field(foreign_key="color.id")
+
+
+class NaipTribe(SQLModel, table=True):
+    __tablename__ = "naip_tribe"
+    __table_args__ = (
+        UniqueConstraint("naip_fk", "tribe_fk"),
+        Index("ix_naip_tribe_naip_fk", "naip_fk"),
+        Index("ix_naip_tribe_tribe_fk", "tribe_fk"),
+    )
+
+    id: int | None = Field(default=None, primary_key=True)
+    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    naip_fk: int = Field(foreign_key="naip.id")
+    tribe_fk: int = Field(foreign_key="tribe.id")
+
+
+class NaipAttribute(SQLModel, table=True):
+    __tablename__ = "naip_attribute"
+    __table_args__ = (
+        UniqueConstraint("naip_fk", "attribute_fk"),
+        Index("ix_naip_attribute_naip_fk", "naip_fk"),
+        Index("ix_naip_attribute_attribute_fk", "attribute_fk"),
+    )
+
+    id: int | None = Field(default=None, primary_key=True)
+    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    naip_fk: int = Field(foreign_key="naip.id")
+    attribute_fk: int = Field(foreign_key="attribute.id")
+
+
+class NaipKeyword(SQLModel, table=True):
+    __tablename__ = "naip_keyword"
+    __table_args__ = (
+        UniqueConstraint("naip_fk", "keyword_fk"),
+        Index("ix_naip_keyword_naip_fk", "naip_fk"),
+        Index("ix_naip_keyword_keyword_fk", "keyword_fk"),
+    )
+
+    id: int | None = Field(default=None, primary_key=True)
+    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    naip_fk: int = Field(foreign_key="naip.id")
+    keyword_fk: int = Field(foreign_key="keyword.id")
+
+
+class NaipResword(SQLModel, table=True):
+    __tablename__ = "naip_resword"
+    __table_args__ = (
+        UniqueConstraint("naip_fk", "resword_fk"),
+        Index("ix_naip_resword_naip_fk", "naip_fk"),
+        Index("ix_naip_resword_resword_fk", "resword_fk"),
+    )
+
+    id: int | None = Field(default=None, primary_key=True)
+    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    naip_fk: int = Field(foreign_key="naip.id")
+    resword_fk: int = Field(foreign_key="resword.id")
+
+
+class NaipBlock(SQLModel, table=True):
+    __tablename__ = "naip_block"
+    __table_args__ = (
+        UniqueConstraint("naip_fk", "block_fk"),
+        Index("ix_naip_block_naip_fk", "naip_fk"),
+        Index("ix_naip_block_block_fk", "block_fk"),
+    )
+
+    id: int | None = Field(default=None, primary_key=True)
+    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    naip_fk: int = Field(foreign_key="naip.id")
+    block_fk: int = Field(foreign_key="block.id")
+
+
+class NaipFormat(SQLModel, table=True):
+    __tablename__ = "naip_format"
+    __table_args__ = (
+        UniqueConstraint("naip_fk", "format_fk"),
+        Index("ix_naip_format_naip_fk", "naip_fk"),
+        Index("ix_naip_format_format_fk", "format_fk"),
+    )
+
+    id: int | None = Field(default=None, primary_key=True)
+    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    naip_fk: int = Field(foreign_key="naip.id")
+    format_fk: int = Field(foreign_key="format.id")

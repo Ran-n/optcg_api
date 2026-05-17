@@ -38,7 +38,6 @@ from optcg_api.models import (  # noqa: E402, I001
     Color,
     Effect,
     Name,
-    Naip,
     Rarity,
     Set,
     SetType,
@@ -382,20 +381,17 @@ def _persist(session: Session, sets_data: list[dict], cards_data: list[dict]) ->
             if color_pk not in existing_colors:
                 session.add(CardColor(card_fk=card_pk, color_fk=color_pk))
 
-        # Rarity (resolved here; written to Naip below)
-        rarity_fk: int | None = None
+        # Rarity — populate lookup table
         rarity_text = cd.get("rarity")
-        if rarity_text:
-            if rarity_text not in rarity_cache:
-                existing_r = session.exec(select(Rarity).where(Rarity.symbol == rarity_text)).first()
-                if existing_r:
-                    rarity_cache[rarity_text] = existing_r
-                else:
-                    r = Rarity(symbol=rarity_text, name=rarity_text)
-                    session.add(r)
-                    session.flush()
-                    rarity_cache[rarity_text] = r
-            rarity_fk = rarity_cache[rarity_text].id
+        if rarity_text and rarity_text not in rarity_cache:
+            existing_r = session.exec(select(Rarity).where(Rarity.symbol == rarity_text)).first()
+            if existing_r:
+                rarity_cache[rarity_text] = existing_r
+            else:
+                r = Rarity(symbol=rarity_text, name=rarity_text)
+                session.add(r)
+                session.flush()
+                rarity_cache[rarity_text] = r
 
         # Attribute
         attribute_text = cd.get("attribute")
@@ -422,26 +418,6 @@ def _persist(session: Session, sets_data: list[dict], cards_data: list[dict]) ->
             tribe_pk = tribe_cache[tribe_name].id
             if tribe_pk not in existing_tribes:
                 session.add(CardTribe(card_fk=card_pk, tribe_fk=tribe_pk))
-
-        # Naip — default print record for this card
-        existing_naip = session.exec(
-            select(Naip).where(Naip.card_fk == card_pk, Naip.set_fk == set_pk, Naip.is_default == True)  # noqa: E712
-        ).first()
-        if existing_naip:
-            existing_naip.rarity_fk = rarity_fk
-            existing_naip.effect_fk = effect_fk
-            existing_naip.trigger_fk = trigger_fk
-        else:
-            session.add(
-                Naip(
-                    card_fk=card_pk,
-                    set_fk=set_pk,
-                    rarity_fk=rarity_fk,
-                    effect_fk=effect_fk,
-                    trigger_fk=trigger_fk,
-                    is_default=True,
-                )
-            )
 
         upserted += 1
 
