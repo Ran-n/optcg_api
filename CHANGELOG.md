@@ -1,7 +1,7 @@
 [//]: # ( ---------------------------------------------------------------------- )
 [//]: # (+ Authors: 	Ran# <ran.hash@proton.me> )
 [//]: # (+ Created: 	2026/05/12 16:27:41 )
-[//]: # (+ Revised: 	2026/05/18 09:28:26.666652 )
+[//]: # (+ Revised: 	2026/05/18 13:45:51.002894 )
 [//]: # ( ---------------------------------------------------------------------- )
 
 # Changelog
@@ -28,7 +28,7 @@ This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 - ER and MR diagrams updated to reflect `is_errata` column on `Naip`
 - `Name`, `Effect`, `Trigger`, `Image` dedup tables — shared string values referenced by FK from `Card` and `Naip` to avoid redundancy
 - `CardEffectHistory`, `CardTriggerHistory` audit tables with `valid_from` / `valid_to` validity windows
-- `_DateTimeMs` custom SQLAlchemy type — stores `datetime` as `YYYY-MM-DD HH:MM:SS.mmm` (millisecond precision) in SQLite
+- DB-side timestamp defaults: all tables use `strftime('%Y-%m-%d %H:%M:%f', 'now')` as `server_default` for `created_ts` and `updated_ts`; SQLite `AFTER UPDATE` triggers auto-bump `updated_ts` on every row change; migration `h2i3j4k5l6m7`
 - `ingest.py`: name/effect/trigger dedup caches; `Naip` creation with rarity FK; Python 3.12 generic function syntax (`_get_or_create[T]`)
 - `ruff` exclusion for `alembic/versions/`; suppressed rules `B008` and `B904`
 - `Card` model: `UniqueConstraint("set_fk", "number")` and indexes on `set_fk`, `cardtype_fk`, `name_fk`; migration `d5e6f7a8b9c0`
@@ -44,7 +44,7 @@ This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 - All table names normalised to snake_case: `settype` → `set_type`, `cardtype` → `card_type`, `cardattribute` → `card_attribute`, `cardcolor` → `card_color`, `cardrarity` → `card_rarity`, `cardblock` → `card_block`, `cardformat` → `card_format`, `cardkeywords` → `card_keyword`, `cardreswords` → `card_resword`
 - `CardKeywords` / `CardReswords` junction models renamed to `CardKeyword` / `CardResword` for consistency
 - `Card` columns `name`, `desc`, `trigger` replaced by FK references `name_fk`, `effect_fk`, `trigger_fk` pointing to the new dedup tables
-- Timestamps changed from `date` (SQLite `CURRENT_DATE` server-default) to `datetime` with millisecond precision set in Python; `onupdate` now triggers correctly on every flush
+- Timestamps moved from Python-side `_DateTimeMs` / `_now_ms` to DB-side `server_default` + SQLite triggers; `_ts_col()` replaces the former `_created_col()` / `_updated_col()` helpers; Python `UTC` / `TypeDecorator` imports removed from `models.py`
 - `init_db()` now creates `data/` directory before calling `create_all`; stamps Alembic head after schema creation so fresh databases start in sync with migration history
 - All models updated from `Optional[T]` syntax to `T | None` (Python 3.10+ union style)
 - `ingest.py`: removed `CardRarity` direct upsert (rarity now stored on `Naip`); updated card upsert to write `name_fk`, `effect_fk`, `trigger_fk`; removed `Naip` auto-creation during ingest (naip records are managed separately)

@@ -2,45 +2,20 @@
 """
 Authors: Ran# <ran.hash@proton.me>
 Created: 2026/05/13 13:13:00.000000
-Revised: 2026/05/18 09:30:43.993928
+Revised: 2026/05/18 13:45:51.176149
 """
 
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 
 import sqlalchemy as sa
 from sqlalchemy import Index, UniqueConstraint
-from sqlalchemy.types import TypeDecorator
 from sqlmodel import Field, SQLModel
 
-
-class _DateTimeMs(TypeDecorator):
-    """Stores datetime as 'YYYY-MM-DD HH:MM:SS.mmm' (3 decimal places)."""
-
-    impl = sa.String
-    cache_ok = True
-
-    def process_bind_param(self, value, _dialect):
-        if value is None:
-            return None
-        return value.strftime("%Y-%m-%d %H:%M:%S.") + f"{value.microsecond // 1000:03d}"
-
-    def process_result_value(self, value, _dialect):
-        if value is None:
-            return None
-        return datetime.strptime(value, "%Y-%m-%d %H:%M:%S.%f")
+_TS_SERVER_DEFAULT = sa.text("(strftime('%Y-%m-%d %H:%M:%f', 'now'))")
 
 
-def _now_ms() -> datetime:
-    dt = datetime.now(UTC)
-    return dt.replace(tzinfo=None, microsecond=(dt.microsecond // 1000) * 1000)
-
-
-def _created_col() -> sa.Column:
-    return sa.Column(_DateTimeMs, nullable=True, default=_now_ms)
-
-
-def _updated_col() -> sa.Column:
-    return sa.Column(_DateTimeMs, nullable=True, default=_now_ms, onupdate=_now_ms)
+def _ts_col() -> sa.Column:
+    return sa.Column(sa.String, nullable=True, server_default=_TS_SERVER_DEFAULT)
 
 
 # ── Lookup tables ────────────────────────────────────────────────────────────
@@ -50,8 +25,8 @@ class SetType(SQLModel, table=True):
     __tablename__ = "set_type"
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     name: str
     desc: str | None = None
 
@@ -60,8 +35,8 @@ class CardType(SQLModel, table=True):
     __tablename__ = "card_type"
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     symbol: str
     name: str
     desc: str | None = None
@@ -71,8 +46,8 @@ class Artist(SQLModel, table=True):
     __tablename__ = "artist"
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     name: str
     desc: str | None = None
 
@@ -81,8 +56,8 @@ class Rarity(SQLModel, table=True):
     __tablename__ = "rarity"
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     symbol: str
     name: str
     desc: str | None = None
@@ -92,8 +67,8 @@ class Tribe(SQLModel, table=True):
     __tablename__ = "tribe"
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     name: str
     desc: str | None = None
 
@@ -102,8 +77,8 @@ class Attribute(SQLModel, table=True):
     __tablename__ = "attribute"
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     name: str
     desc: str | None = None
 
@@ -112,8 +87,8 @@ class Color(SQLModel, table=True):
     __tablename__ = "color"
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     name: str
     desc: str | None = None
 
@@ -122,8 +97,8 @@ class Block(SQLModel, table=True):
     __tablename__ = "block"
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     name: str
     desc: str | None = None
 
@@ -132,8 +107,8 @@ class Format(SQLModel, table=True):
     __tablename__ = "format"
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     name: str
     desc: str | None = None
 
@@ -142,8 +117,8 @@ class Keyword(SQLModel, table=True):
     __tablename__ = "keyword"
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     name: str
     desc: str | None = None
 
@@ -152,8 +127,8 @@ class Resword(SQLModel, table=True):
     __tablename__ = "resword"
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     name: str
     desc: str | None = None
 
@@ -165,8 +140,8 @@ class Set(SQLModel, table=True):
     __tablename__ = "set"
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     type_fk: int | None = Field(default=None, foreign_key="set_type.id")
     code: str = Field(sa_column=sa.Column(sa.String, nullable=False, unique=True))
     name: str
@@ -180,8 +155,8 @@ class Name(SQLModel, table=True):
     __tablename__ = "name"
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     name: str = Field(sa_column=sa.Column(sa.String, nullable=False, unique=True))
 
 
@@ -189,8 +164,8 @@ class Image(SQLModel, table=True):
     __tablename__ = "image"
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     path: str = Field(sa_column=sa.Column(sa.String, nullable=False, unique=True))
 
 
@@ -198,8 +173,8 @@ class Effect(SQLModel, table=True):
     __tablename__ = "effect"
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     effect: str = Field(sa_column=sa.Column(sa.String, nullable=False, unique=True))
 
 
@@ -207,8 +182,8 @@ class Trigger(SQLModel, table=True):
     __tablename__ = "trigger"
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     trigger: str = Field(sa_column=sa.Column(sa.String, nullable=False, unique=True))
 
 
@@ -222,8 +197,8 @@ class Card(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     set_fk: int = Field(foreign_key="set.id")
     cardtype_fk: int = Field(foreign_key="card_type.id")
     name_fk: int = Field(foreign_key="name.id")
@@ -256,8 +231,8 @@ class Naip(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     card_fk: int = Field(foreign_key="card.id")
     set_fk: int = Field(foreign_key="set.id")
     artist_fk: int | None = Field(default=None, foreign_key="artist.id")
@@ -280,8 +255,8 @@ class CardEffectHistory(SQLModel, table=True):
     __tablename__ = "card_effect_history"
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     card_fk: int = Field(foreign_key="card.id")
     effect_fk: int = Field(foreign_key="effect.id")
     valid_from: date
@@ -292,8 +267,8 @@ class CardTriggerHistory(SQLModel, table=True):
     __tablename__ = "card_trigger_history"
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     card_fk: int = Field(foreign_key="card.id")
     trigger_fk: int = Field(foreign_key="trigger.id")
     valid_from: date
@@ -312,8 +287,8 @@ class CardTribe(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     card_fk: int = Field(foreign_key="card.id")
     tribe_fk: int = Field(foreign_key="tribe.id")
 
@@ -327,8 +302,8 @@ class CardAttribute(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     card_fk: int = Field(foreign_key="card.id")
     attribute_fk: int = Field(foreign_key="attribute.id")
 
@@ -342,8 +317,8 @@ class CardColor(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     card_fk: int = Field(foreign_key="card.id")
     color_fk: int = Field(foreign_key="color.id")
 
@@ -357,8 +332,8 @@ class CardRarity(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     card_fk: int = Field(foreign_key="card.id")
     rarity_fk: int = Field(foreign_key="rarity.id")
 
@@ -372,8 +347,8 @@ class CardBlock(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     card_fk: int = Field(foreign_key="card.id")
     block_fk: int = Field(foreign_key="block.id")
 
@@ -387,8 +362,8 @@ class CardFormat(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     card_fk: int = Field(foreign_key="card.id")
     format_fk: int = Field(foreign_key="format.id")
 
@@ -402,8 +377,8 @@ class CardKeyword(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     card_fk: int = Field(foreign_key="card.id")
     keyword_fk: int = Field(foreign_key="keyword.id")
 
@@ -417,8 +392,8 @@ class CardResword(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     card_fk: int = Field(foreign_key="card.id")
     resword_fk: int = Field(foreign_key="resword.id")
 
@@ -435,8 +410,8 @@ class NaipColor(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     naip_fk: int = Field(foreign_key="naip.id")
     color_fk: int = Field(foreign_key="color.id")
 
@@ -450,8 +425,8 @@ class NaipTribe(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     naip_fk: int = Field(foreign_key="naip.id")
     tribe_fk: int = Field(foreign_key="tribe.id")
 
@@ -465,8 +440,8 @@ class NaipAttribute(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     naip_fk: int = Field(foreign_key="naip.id")
     attribute_fk: int = Field(foreign_key="attribute.id")
 
@@ -480,8 +455,8 @@ class NaipKeyword(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     naip_fk: int = Field(foreign_key="naip.id")
     keyword_fk: int = Field(foreign_key="keyword.id")
 
@@ -495,8 +470,8 @@ class NaipResword(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     naip_fk: int = Field(foreign_key="naip.id")
     resword_fk: int = Field(foreign_key="resword.id")
 
@@ -510,8 +485,8 @@ class NaipBlock(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     naip_fk: int = Field(foreign_key="naip.id")
     block_fk: int = Field(foreign_key="block.id")
 
@@ -525,7 +500,7 @@ class NaipFormat(SQLModel, table=True):
     )
 
     id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_created_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_updated_col())
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     naip_fk: int = Field(foreign_key="naip.id")
     format_fk: int = Field(foreign_key="format.id")

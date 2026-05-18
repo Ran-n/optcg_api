@@ -2,7 +2,7 @@
 """
 Authors: Ran# <ran.hash@proton.me>
 Created: 2026/05/13 13:13:00.000000
-Revised: 2026/05/15 13:17:09.998719
+Revised: 2026/05/18 13:45:51.080616
 
 Populate the optcg.db database by scraping en.onepiece-cardgame.com/cardlist/.
 
@@ -228,7 +228,8 @@ def _parse_card_dl(dl: Tag, set_code: str) -> dict | None:
         h3 = effect_el.select_one("h3")
         if h3:
             h3.decompose()
-        effect = effect_el.get_text(strip=True) or None
+        raw = effect_el.get_text(strip=True)
+        effect = raw if raw and raw != "-" else None
 
     trigger_el = back.select_one(".trigger")
     trigger = None
@@ -236,7 +237,8 @@ def _parse_card_dl(dl: Tag, set_code: str) -> dict | None:
         h3 = trigger_el.select_one("h3")
         if h3:
             h3.decompose()
-        trigger = trigger_el.get_text(strip=True) or None
+        raw = trigger_el.get_text(strip=True)
+        trigger = raw if raw and raw != "-" else None
 
     return {
         "card_id": card_id,
