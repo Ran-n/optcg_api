@@ -1,7 +1,7 @@
 [//]: # ( ---------------------------------------------------------------------- )
 [//]: # (+ Authors: 	Ran# <ran.hash@proton.me> )
 [//]: # (+ Created: 	2026/05/12 16:27:41 )
-[//]: # (+ Revised: 	2026/05/18 14:15:53.586486 )
+[//]: # (+ Revised: 	2026/05/20 13:39:02.464401 )
 [//]: # ( ---------------------------------------------------------------------- )
 
 # Changelog
@@ -13,6 +13,12 @@ This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ---
 
 ## [Unreleased]
+
+### Added
+
+- `Naip.serial_max` nullable integer column — the total print run size for a serialized naip (e.g. 500 for a 1/500 card); migration `d67a59a0943a`
+- `NaipSerial` table — records each known revealed copy of a serialized naip (`naip_fk`, `serial_number`, `image_fk`); unique on `(naip_fk, serial_number)` with a `CHECK serial_number >= 1` constraint; migration `d67a59a0943a`
+- `trg_naip_serial_update` SQLite trigger to auto-bump `updated_ts` on `naip_serial` row changes; migration `75adbb637f38`
 
 ### Fixed
 

@@ -2,7 +2,7 @@
 """
 Authors: Ran# <ran.hash@proton.me>
 Created: 2026/05/13 13:13:00.000000
-Revised: 2026/05/18 13:45:51.176149
+Revised: 2026/05/20 13:37:47.479058
 """
 
 from datetime import date, datetime
@@ -244,11 +244,30 @@ class Naip(SQLModel, table=True):
     is_default: bool = Field(default=False)
     is_errata: bool = Field(default=False)
     sort_order: int | None = Field(default=None)
+    serial_max: int | None = Field(default=None)
     cardtype_fk: int | None = Field(default=None, foreign_key="card_type.id")
     power: int | None = None
     life: int | None = None
     counter: int | None = None
     cost: int | None = None
+
+
+class NaipSerial(SQLModel, table=True):
+    """A known revealed copy of a serialized naip."""
+
+    __tablename__ = "naip_serial"
+    __table_args__ = (
+        UniqueConstraint("naip_fk", "serial_number"),
+        Index("ix_naip_serial_naip_fk", "naip_fk"),
+        sa.CheckConstraint("serial_number >= 1", name="ck_naip_serial_number_positive"),
+    )
+
+    id: int | None = Field(default=None, primary_key=True)
+    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
+    naip_fk: int = Field(foreign_key="naip.id")
+    serial_number: int
+    image_fk: int | None = Field(default=None, foreign_key="image.id")
 
 
 class CardEffectHistory(SQLModel, table=True):
