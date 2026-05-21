@@ -1,7 +1,7 @@
 [//]: # ( ---------------------------------------------------------------------- )
 [//]: # (+ Authors: 	Ran# <ran.hash@proton.me> )
 [//]: # (+ Created: 	2026/05/12 16:27:41 )
-[//]: # (+ Revised: 	2026/05/20 13:39:02.464401 )
+[//]: # (+ Revised: 	2026/05/21 13:17:21.416160 )
 [//]: # ( ---------------------------------------------------------------------- )
 
 # Changelog
@@ -19,6 +19,15 @@ This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 - `Naip.serial_max` nullable integer column — the total print run size for a serialized naip (e.g. 500 for a 1/500 card); migration `d67a59a0943a`
 - `NaipSerial` table — records each known revealed copy of a serialized naip (`naip_fk`, `serial_number`, `image_fk`); unique on `(naip_fk, serial_number)` with a `CHECK serial_number >= 1` constraint; migration `d67a59a0943a`
 - `trg_naip_serial_update` SQLite trigger to auto-bump `updated_ts` on `naip_serial` row changes; migration `75adbb637f38`
+- `Block.image_fk` nullable FK → `image.id`; migration `a3b4c5d6e7f8`
+- `Card.block_fk` nullable FK → `block.id` (replaces `card_block` junction); migration `a3b4c5d6e7f8`
+- `Naip.block_fk` nullable FK → `block.id` (replaces `naip_block` junction); migration `a3b4c5d6e7f8`
+- `Set.block_fk` nullable FK → `block.id` — a set belongs to exactly one block; migration `b4c5d6e7f8a9`
+- `CardBan` table — per-card ban scoped to a format or all formats when `format_fk IS NULL`; NULL-safe partial unique index prevents duplicate global bans; `trg_card_ban_update` trigger; migrations `a3b4c5d6e7f8`, `b4c5d6e7f8a9`
+- `BannedPair` table — two-card combo ban with `ck_banned_pair_ordered` constraint (`card_a_fk < card_b_fk`) and NULL-safe partial unique index for global pair bans; `trg_banned_pair_update` trigger; migrations `a3b4c5d6e7f8`, `b4c5d6e7f8a9`
+- `trg_block_update` SQLite trigger to auto-bump `updated_ts` on `block` row changes; migration `a3b4c5d6e7f8`
+- `trg_naip_serial_check_max_insert` / `trg_naip_serial_check_max_update` BEFORE triggers enforce `serial_number ≤ serial_max` on `naip_serial` rows (SQLite `CHECK` cannot reference other tables); migration `b4c5d6e7f8a9`
+- BACKLOG: region & language system spec — `language`, `region`, `region_language` tables; BCP-47 language codes; UN M.49 region codes; `naip.language_fk`; seed data for 5 languages and 15 regions
 
 ### Fixed
 
@@ -28,6 +37,13 @@ This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 - Migration `e1a2b3c4d5e6`: table renames now guarded with `_table_exists` check so re-running is idempotent
 - Migration `a1b2c3d4e5f7`: adds `is_default` column if missing before adding `is_errata`, preventing column-not-found errors on databases upgraded out of order
 - Migration `f1a2b3c4d5e6`: `is_default` dedup and unique-index steps skipped when column is absent; index creation uses `IF NOT EXISTS`
+- Migration `b4c5d6e7f8a9`: `naip_format` drop is guarded by a runtime table-existence check, making the migration idempotent on databases that never had the table
+
+### Removed
+
+- `CardBlock` junction model and `card_block` table — replaced by `Card.block_fk` direct FK; migration `a3b4c5d6e7f8`
+- `NaipBlock` junction model and `naip_block` table — replaced by `Naip.block_fk` direct FK; migration `a3b4c5d6e7f8`
+- `NaipFormat` junction model and `naip_format` table — format legality is card-level only; migration `b4c5d6e7f8a9`
 
 ### Added
 

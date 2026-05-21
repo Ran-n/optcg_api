@@ -29,6 +29,7 @@ from collections.abc import Sequence
 from datetime import date
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision: str = "e5f6a7b8c9d0"

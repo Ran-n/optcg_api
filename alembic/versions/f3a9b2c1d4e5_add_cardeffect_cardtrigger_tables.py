@@ -9,6 +9,7 @@ Create Date: 2026-05-14 00:00:00.000000
 from collections.abc import Sequence
 
 import sqlalchemy as sa  # noqa: I001
+
 from alembic import op
 
 revision: str = "f3a9b2c1d4e5"

@@ -2,7 +2,7 @@
 """
 Authors: Ran# <ran.hash@proton.me>
 Created: 2026/05/13 13:13:00.000000
-Revised: 2026/05/20 13:37:47.479058
+Revised: 2026/05/21 13:17:44.808938
 """
 
 from datetime import date, datetime
@@ -101,6 +101,7 @@ class Block(SQLModel, table=True):
     updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     name: str
     desc: str | None = None
+    image_fk: int | None = Field(default=None, foreign_key="image.id")
 
 
 class Format(SQLModel, table=True):
@@ -143,6 +144,7 @@ class Set(SQLModel, table=True):
     created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     type_fk: int | None = Field(default=None, foreign_key="set_type.id")
+    block_fk: int | None = Field(default=None, foreign_key="block.id")
     code: str = Field(sa_column=sa.Column(sa.String, nullable=False, unique=True))
     name: str
     series: str | None = None
@@ -204,6 +206,7 @@ class Card(SQLModel, table=True):
     name_fk: int = Field(foreign_key="name.id")
     effect_fk: int | None = Field(default=None, foreign_key="effect.id")
     trigger_fk: int | None = Field(default=None, foreign_key="trigger.id")
+    block_fk: int | None = Field(default=None, foreign_key="block.id")
     number: int
     power: int | None = None
     life: int | None = None
@@ -246,6 +249,7 @@ class Naip(SQLModel, table=True):
     sort_order: int | None = Field(default=None)
     serial_max: int | None = Field(default=None)
     cardtype_fk: int | None = Field(default=None, foreign_key="card_type.id")
+    block_fk: int | None = Field(default=None, foreign_key="block.id")
     power: int | None = None
     life: int | None = None
     counter: int | None = None
@@ -355,21 +359,6 @@ class CardRarity(SQLModel, table=True):
     updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     card_fk: int = Field(foreign_key="card.id")
     rarity_fk: int = Field(foreign_key="rarity.id")
-
-
-class CardBlock(SQLModel, table=True):
-    __tablename__ = "card_block"
-    __table_args__ = (
-        UniqueConstraint("card_fk", "block_fk"),
-        Index("ix_card_block_card_fk", "card_fk"),
-        Index("ix_card_block_block_fk", "block_fk"),
-    )
-
-    id: int | None = Field(default=None, primary_key=True)
-    created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
-    updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
-    card_fk: int = Field(foreign_key="card.id")
-    block_fk: int = Field(foreign_key="block.id")
 
 
 class CardFormat(SQLModel, table=True):
@@ -495,31 +484,51 @@ class NaipResword(SQLModel, table=True):
     resword_fk: int = Field(foreign_key="resword.id")
 
 
-class NaipBlock(SQLModel, table=True):
-    __tablename__ = "naip_block"
+# ── Ban tables ───────────────────────────────────────────────────────────────
+
+
+class CardBan(SQLModel, table=True):
+    """A card banned in a specific format, or all formats when format_fk is NULL."""
+
+    __tablename__ = "card_ban"
     __table_args__ = (
-        UniqueConstraint("naip_fk", "block_fk"),
-        Index("ix_naip_block_naip_fk", "naip_fk"),
-        Index("ix_naip_block_block_fk", "block_fk"),
+        UniqueConstraint("card_fk", "format_fk"),
+        # NULL-safe guard: only one global ban row per card
+        Index("ix_card_ban_global_unique", "card_fk", unique=True, sqlite_where=sa.text("format_fk IS NULL")),
+        Index("ix_card_ban_card_fk", "card_fk"),
+        Index("ix_card_ban_format_fk", "format_fk"),
     )
 
     id: int | None = Field(default=None, primary_key=True)
     created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
-    naip_fk: int = Field(foreign_key="naip.id")
-    block_fk: int = Field(foreign_key="block.id")
+    card_fk: int = Field(foreign_key="card.id")
+    format_fk: int | None = Field(default=None, foreign_key="format.id")
 
 
-class NaipFormat(SQLModel, table=True):
-    __tablename__ = "naip_format"
+class BannedPair(SQLModel, table=True):
+    """Two cards that cannot coexist in the same deck, optionally scoped to a format."""
+
+    __tablename__ = "banned_pair"
     __table_args__ = (
-        UniqueConstraint("naip_fk", "format_fk"),
-        Index("ix_naip_format_naip_fk", "naip_fk"),
-        Index("ix_naip_format_format_fk", "format_fk"),
+        UniqueConstraint("card_a_fk", "card_b_fk", "format_fk"),
+        # NULL-safe guard: only one global ban row per pair
+        Index(
+            "ix_banned_pair_global_unique",
+            "card_a_fk",
+            "card_b_fk",
+            unique=True,
+            sqlite_where=sa.text("format_fk IS NULL"),
+        ),
+        Index("ix_banned_pair_card_a_fk", "card_a_fk"),
+        Index("ix_banned_pair_card_b_fk", "card_b_fk"),
+        Index("ix_banned_pair_format_fk", "format_fk"),
+        sa.CheckConstraint("card_a_fk < card_b_fk", name="ck_banned_pair_ordered"),
     )
 
     id: int | None = Field(default=None, primary_key=True)
     created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
     updated_ts: datetime | None = Field(default=None, sa_column=_ts_col())
-    naip_fk: int = Field(foreign_key="naip.id")
-    format_fk: int = Field(foreign_key="format.id")
+    card_a_fk: int = Field(foreign_key="card.id")
+    card_b_fk: int = Field(foreign_key="card.id")
+    format_fk: int | None = Field(default=None, foreign_key="format.id")
