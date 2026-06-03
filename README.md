@@ -1,7 +1,7 @@
 [//]: # ( ---------------------------------------------------------------------- )
 [//]: # (+ Authors: 	Ran# <ran.hash@proton.me> )
 [//]: # (+ Created: 	2026/05/12 16:26:17 )
-[//]: # (+ Revised: 	2026/05/20 13:39:02.602798 )
+[//]: # (+ Revised: 	2026/06/03 16:32:32.739705 )
 [//]: # ( ---------------------------------------------------------------------- )
 
 # optcg_api
@@ -66,24 +66,48 @@ Fetches every series from `en.onepiece-cardgame.com/cardlist/` and writes sets, 
 | `DELETE /cards/{id}` | Delete a card |
 | `POST /cards/{id}/image` | Upload card image (multipart file) |
 | `POST /cards/{id}/image-url` | Fetch and store card image from URL |
-| `GET /images/{filename}` | Serve stored card images (static) |
+| `GET /naips/{id}` | Get naip with enriched detail |
+| `POST /naips/` | Create a naip |
+| `PUT /naips/{id}` | Update a naip |
+| `DELETE /naips/{id}` | Delete a naip |
+| `POST /naips/{id}/image` | Upload naip image (multipart file) |
+| `POST /naips/{id}/image-url` | Fetch and store naip image from URL |
 | `GET /sets/` | List all sets |
 | `GET /sets/{id}` | Get a set |
-| `GET /lookups/{resource}` | Lookup table values |
-
-Lookup resources: `cardtypes`, `colors`, `tribes`, `attributes`, `rarities`, `blocks`, `formats`, `keywords`, `reswords`, `artists`, `sets`.
+| `GET /images/{filename}` | Serve stored images (static) |
+| `GET /lookups/cardtypes` | Card types |
+| `GET /lookups/colors` | Colors |
+| `GET /lookups/tribes` | Tribes |
+| `GET /lookups/attributes` | Attributes |
+| `GET /lookups/rarities` | Rarities |
+| `GET /lookups/print-variants` | Print variants (STD, AA, TR, SP, GR, …) |
+| `GET /lookups/blocks` | Blocks |
+| `GET /lookups/formats` | Formats |
+| `GET /lookups/keywords` | Keywords |
+| `GET /lookups/reswords` | Restricted words |
+| `GET /lookups/artists` | Artists |
+| `GET /lookups/sets` | Sets (code + name) |
+| `GET /lookups/settypes` | Set types |
+| `GET /lookups/languages` | Languages |
+| `GET /lookups/regions` | Regions |
 
 ## Data model
 
-Core tables: `set` (with `series` and `ord` for grouping/ordering within a release series), `card`, `naip` (physical print — card + set + artist + rarity; holds per-print overrides for name, effect, trigger, and image; `is_default` flags the canonical print; `serial_max` records total print run size for serialized cards), `naip_serial` (each known revealed copy of a serialized naip, keyed by `serial_number`).
+Core tables: `set` (with `parent_fk` self-referential FK linking a set to its canonical counterpart or parent product), `card`, `naip` (physical print — card + set + artist + print variant; holds per-print overrides for name, effect, trigger, and image; `is_default` flags the canonical print; `is_foil`, `is_errata`, `serial_max`), `naip_serial` (each known revealed copy of a serialized naip, keyed by `serial_number`).
 
 Text dedup tables: `name`, `effect`, `trigger`, `image` — shared string values referenced by FK to avoid redundancy.
 
 History tables: `card_effect_history`, `card_trigger_history` — audit log of text changes with validity windows.
 
-Lookup tables: `set_type`, `card_type`, `artist`, `rarity`, `tribe`, `attribute`, `color`, `block`, `format`, `keyword`, `resword`.
+Lookup tables: `set_type`, `card_type`, `artist`, `rarity`, `print_variant` (hierarchy of print-level finishes via `parent_fk`), `tribe`, `attribute`, `color`, `block`, `format`, `keyword`, `resword`, `language`, `region`.
 
-Junction tables link cards to their many-to-many attributes: `card_color`, `card_tribe`, `card_attribute`, `card_rarity`, `card_block`, `card_format`, `card_keyword`, `card_resword`.
+Region mapping: `region_language` — which languages are officially used in each region.
+
+Junction tables (card level): `card_color`, `card_tribe`, `card_attribute`, `card_format`, `card_keyword`, `card_resword`.
+
+Junction tables (naip level): `naip_color`, `naip_tribe`, `naip_attribute`, `naip_keyword`, `naip_resword` — per-print overrides for many-to-many attributes.
+
+Ban tables: `card_ban` (card banned in a format or globally), `banned_pair` (two cards that cannot coexist in a deck).
 
 ## Development
 
