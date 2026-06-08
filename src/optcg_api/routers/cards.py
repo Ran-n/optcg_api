@@ -2,7 +2,7 @@
 """
 Authors: Ran# <ran.hash@proton.me>
 Created: 2026/05/13 13:13:00.000000
-Revised: 2026/06/02 20:28:44.007569
+Revised: 2026/06/08 13:00:46.726038
 """
 
 from pathlib import Path
@@ -112,6 +112,9 @@ class CardListItem(BaseModel):
     counter: int | None = None
     set_code: str | None = None
     cardtype_name: str | None = None
+    colors: str | None = None
+    rarity_symbol: str | None = None
+    image_path: str | None = None
 
 
 class CardListResponse(BaseModel):
@@ -315,11 +318,17 @@ def list_cards(
     rows = session.exec(
         text(
             f"SELECT c.id, c.set_fk, c.cardtype_fk, c.number, nm.name, c.cost, c.power, c.counter, "
-            f"s.code, ct.name "
+            f"s.code, ct.name, "
+            f"(SELECT GROUP_CONCAT(co.name, ',') FROM color co "
+            f" JOIN card_color cc ON cc.color_fk = co.id WHERE cc.card_fk = c.id), "
+            f"r.symbol, "
+            f"(SELECT img.path FROM naip n LEFT JOIN image img ON img.id = n.image_fk "
+            f" WHERE n.card_fk = c.id AND n.is_default = 1 LIMIT 1) "
             f"FROM card c "
             f"LEFT JOIN name nm ON nm.id = c.name_fk "
             f'LEFT JOIN "set" s ON s.id = c.set_fk '
             f"LEFT JOIN card_type ct ON ct.id = c.cardtype_fk "
+            f"LEFT JOIN rarity r ON r.id = c.rarity_fk "
             f"{where} ORDER BY s.code, c.number LIMIT :limit OFFSET :offset"
         ).bindparams(**params)
     ).all()
@@ -342,6 +351,9 @@ def list_cards(
                 counter=r[7],
                 set_code=r[8],
                 cardtype_name=r[9],
+                colors=r[10],
+                rarity_symbol=r[11],
+                image_path=r[12],
             )
             for r in rows
         ],
