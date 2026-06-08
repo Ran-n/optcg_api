@@ -66,6 +66,7 @@ class NaipItem(BaseModel):
     print_variant_symbol: str | None = None
     set_code: str | None = None
     image_fk: int | None = None
+    image_path: str | None = None
     is_default: bool = False
     is_errata: bool = False
     is_foil: bool = False
@@ -175,12 +176,13 @@ def _enrich(card: Card, session: Session) -> CardDetail:
     naip_rows = session.exec(
         text(
             "SELECT n.id, COALESCE(nm.name, ''), a.name, pv.name, pv.symbol, s.code, "
-            "n.image_fk, n.is_default, n.is_errata, n.is_foil "
+            "n.image_fk, n.is_default, n.is_errata, n.is_foil, img.path "
             "FROM naip n "
             "LEFT JOIN name nm ON nm.id = n.name_fk "
             "LEFT JOIN artist a ON a.id = n.artist_fk "
             "LEFT JOIN print_variant pv ON pv.id = n.print_variant_fk "
             'LEFT JOIN "set" s ON s.id = n.set_fk '
+            "LEFT JOIN image img ON img.id = n.image_fk "
             "WHERE n.card_fk = :cid"
         ).bindparams(cid=card.id)
     ).all()
@@ -196,6 +198,7 @@ def _enrich(card: Card, session: Session) -> CardDetail:
             is_default=bool(r[7]),
             is_errata=bool(r[8]),
             is_foil=bool(r[9]),
+            image_path=r[10],
         )
         for r in naip_rows
     ]

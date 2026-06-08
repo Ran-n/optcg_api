@@ -65,6 +65,7 @@ class Rarity(SQLModel, table=True):
 
 class PrintVariant(SQLModel, table=True):
     __tablename__ = "print_variant"
+    __table_args__ = (Index("ix_print_variant_parent_fk", "parent_fk"),)
 
     id: int | None = Field(default=None, primary_key=True)
     created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
@@ -189,7 +190,12 @@ class RegionLanguage(SQLModel, table=True):
 
 class Set(SQLModel, table=True):
     __tablename__ = "set"
-    __table_args__ = (UniqueConstraint("code", "language_fk"),)
+    __table_args__ = (
+        UniqueConstraint("code", "language_fk"),
+        Index("ix_set_type_fk", "type_fk"),
+        Index("ix_set_language_fk", "language_fk"),
+        Index("ix_set_parent_fk", "parent_fk"),
+    )
 
     id: int | None = Field(default=None, primary_key=True)
     created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
@@ -247,6 +253,9 @@ class Card(SQLModel, table=True):
         Index("ix_card_cardtype_fk", "cardtype_fk"),
         Index("ix_card_name_fk", "name_fk"),
         Index("ix_card_rarity_fk", "rarity_fk"),
+        Index("ix_card_effect_fk", "effect_fk"),
+        Index("ix_card_trigger_fk", "trigger_fk"),
+        Index("ix_card_block_fk", "block_fk"),
     )
 
     id: int | None = Field(default=None, primary_key=True)
@@ -284,7 +293,13 @@ class Naip(SQLModel, table=True):
             unique=True,
             sqlite_where=sa.text("artist_fk IS NOT NULL"),
         ),
+        Index("ix_naip_card_fk", "card_fk"),
+        Index("ix_naip_set_fk", "set_fk"),
         Index("ix_naip_print_variant_fk", "print_variant_fk"),
+        Index("ix_naip_artist_fk", "artist_fk"),
+        Index("ix_naip_language_fk", "language_fk"),
+        Index("ix_naip_cardtype_fk", "cardtype_fk"),
+        Index("ix_naip_block_fk", "block_fk"),
     )
 
     id: int | None = Field(default=None, primary_key=True)
@@ -332,6 +347,10 @@ class NaipSerial(SQLModel, table=True):
 
 class CardEffectHistory(SQLModel, table=True):
     __tablename__ = "card_effect_history"
+    __table_args__ = (
+        Index("ix_card_effect_history_card_fk", "card_fk"),
+        Index("ix_card_effect_history_effect_fk", "effect_fk"),
+    )
 
     id: int | None = Field(default=None, primary_key=True)
     created_ts: datetime | None = Field(default=None, sa_column=_ts_col())
@@ -344,6 +363,10 @@ class CardEffectHistory(SQLModel, table=True):
 
 class CardTriggerHistory(SQLModel, table=True):
     __tablename__ = "card_trigger_history"
+    __table_args__ = (
+        Index("ix_card_trigger_history_card_fk", "card_fk"),
+        Index("ix_card_trigger_history_trigger_fk", "trigger_fk"),
+    )
 
     id: int | None = Field(default=None, primary_key=True)
     created_ts: datetime | None = Field(default=None, sa_column=_ts_col())

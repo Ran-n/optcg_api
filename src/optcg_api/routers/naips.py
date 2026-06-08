@@ -2,7 +2,7 @@
 """
 Authors: Ran# <ran.hash@proton.me>
 Created: 2026/05/30 00:00:00.000000
-Revised: 2026/05/30 00:00:00.000000
+Revised: 2026/06/08 12:41:32.458545
 """
 
 from pathlib import Path
@@ -53,6 +53,7 @@ class NaipDetail(BaseModel):
     print_variant_fk: int
     language_fk: int | None = None
     image_fk: int | None = None
+    image_path: str | None = None
     cardtype_fk: int | None = None
     block_fk: int | None = None
     is_default: bool = False
@@ -160,18 +161,19 @@ def _sync_naip_junctions(naip: Naip, data: NaipWrite, session: Session) -> None:
 def _enrich_naip(naip: Naip, session: Session) -> NaipDetail:
     row = session.exec(
         text(
-            "SELECT a.name, pv.name, pv.symbol, s.code, ct.name, ct.symbol, l.code "
+            "SELECT a.name, pv.name, pv.symbol, s.code, ct.name, ct.symbol, l.code, img.path "
             "FROM naip n "
             "LEFT JOIN artist a ON a.id = n.artist_fk "
             "LEFT JOIN print_variant pv ON pv.id = n.print_variant_fk "
             'LEFT JOIN "set" s ON s.id = n.set_fk '
             "LEFT JOIN card_type ct ON ct.id = n.cardtype_fk "
             "LEFT JOIN language l ON l.id = n.language_fk "
+            "LEFT JOIN image img ON img.id = n.image_fk "
             "WHERE n.id = :nid"
         ).bindparams(nid=naip.id)
     ).first()
-    artist_name, pv_name, pv_symbol, set_code, ct_name, ct_sym, lang_code = (
-        row if row else (None, None, None, None, None, None, None)
+    artist_name, pv_name, pv_symbol, set_code, ct_name, ct_sym, lang_code, image_path = (
+        row if row else (None, None, None, None, None, None, None, None)
     )
 
     name = _resolve_text(session, Name, naip.name_fk, "name")
@@ -213,6 +215,7 @@ def _enrich_naip(naip: Naip, session: Session) -> NaipDetail:
         print_variant_fk=naip.print_variant_fk,
         language_fk=naip.language_fk,
         image_fk=naip.image_fk,
+        image_path=image_path,
         cardtype_fk=naip.cardtype_fk,
         block_fk=naip.block_fk,
         is_default=naip.is_default,

@@ -1,7 +1,7 @@
 [//]: # ( ---------------------------------------------------------------------- )
 [//]: # (+ Authors: 	Ran# <ran.hash@proton.me> )
 [//]: # (+ Created: 	2026/05/12 16:27:41 )
-[//]: # (+ Revised: 	2026/06/03 16:48:45.509838 )
+[//]: # (+ Revised: 	2026/06/08 12:52:46.316071 )
 [//]: # ( ---------------------------------------------------------------------- )
 
 # Changelog
@@ -16,6 +16,8 @@ This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ### Added
 
+- FK indexes on `set` (`type_fk`, `language_fk`), `card` (`effect_fk`, `trigger_fk`, `block_fk`), `naip` (`card_fk`, `set_fk`, `artist_fk`, `language_fk`, `cardtype_fk`, `block_fk`), `print_variant` (`parent_fk`), `card_effect_history` (`card_fk`, `effect_fk`), and `card_trigger_history` (`card_fk`, `trigger_fk`); migration `0006_add_missing_indexes`
+- `CardDetail.naips[].image_path` and `NaipDetail.image_path` — resolved `image.path` for the print's `image_fk`
 - `Language.image_fk` seeded from `data/languages/<code>.svg` on `alembic upgrade head`; flag images copied to `data/images/langs/`; migration `0005_language_images`
 - `PrintVariant` table with `parent_fk` self-reference encoding a hierarchy of print-level variants (STD, AA, TR, SP, GR, MR, EMR, RMR, FA, AUD, PTR, MTR, AU, AG); `trg_print_variant_update` trigger; migration `0003_print_variant`
 - `Card.rarity_fk` nullable FK → `rarity.id` — the canonical base rarity the card was designed as (C, UC, R, SR, SEC, L, D, P), independent of any specific print; `ix_card_rarity_fk` index; migration `0003_print_variant`
